@@ -32,7 +32,7 @@ Return:
         with st.spinner("Sedang menulis..."):
             try:
                 response = client.models.generate_content(
-                    model="gemini-2.5-flash",
+                       model="gemini-3.8-flash",
                     contents=prompt,
                 )
                 st.markdown(response.text)
