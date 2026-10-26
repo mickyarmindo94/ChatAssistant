@@ -134,18 +134,26 @@ with tab_single:
             with st.spinner("Sedang menulis..."):
                 try:
                     text = generate(prompt, image)
-                    sections = parse_sections(text)
-                    if not sections:
-                        st.code(text, language=None, wrap_lines=True)
-                    else:
-                        for key, label in SECTIONS.items():
-                            if key in sections:
-                                st.markdown(f"**{label}**")
-                                # st.code has a built-in copy button (top right of each box)
-                                st.code(sections[key], language=None, wrap_lines=True)
-                    st.caption("⚠️ Periksa dulu hasilnya sebelum dipakai. AI bisa salah menebak fitur produk.")
+                    sections = parse_sections(text) or {"DESKRIPSI": text}
+                    st.session_state["single_keys"] = [k for k in SECTIONS if k in sections]
+                    for k in SECTIONS:
+                        st.session_state[f"edit_{k}"] = sections.get(k, "")
                 except Exception as e:
                     st.error(friendly_error(e))
+
+    # Editable results live outside the button block, so edits survive reruns
+    if st.session_state.get("single_keys"):
+        st.divider()
+        st.subheader("Hasil (bisa diedit)")
+        st.caption("⚠️ Periksa dulu hasilnya sebelum dipakai. AI bisa salah menebak fitur produk.")
+        heights = {"JUDUL": 68, "DESKRIPSI": 240, "POIN": 170, "HASHTAG": 68, "CAPTION": 110}
+        final_parts = []
+        for k in st.session_state["single_keys"]:
+            final_parts.append(
+                st.text_area(SECTIONS[k], key=f"edit_{k}", height=heights.get(k, 120))
+            )
+        st.markdown("**Versi final (siap salin)** - klik ikon salin di pojok kanan atas")
+        st.code("\n\n".join(p for p in final_parts if p.strip()), language=None, wrap_lines=True)
 
 # ---------- Bulk mode ----------
 with tab_bulk:
